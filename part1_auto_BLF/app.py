@@ -20,5 +20,6 @@ strip.begin()
 def display_colour(red, green, blue):
     for i in range(strip.numPixels()):
         strip.setPixelColor(i, Color(red, green, blue))
+        strip.show()
 
 display_colour(200, 50, 0)
