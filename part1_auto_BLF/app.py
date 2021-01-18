@@ -22,4 +22,50 @@ def display_colour(red, green, blue):
         strip.setPixelColor(i, Color(red, green, blue))
         strip.show()
 
+
+def clamp(n, minn, maxn):
+    return max(min(maxn, n), minn)
+
+
+def convertTempToRGB(temp):
+    # Function for converting a colour temperature in Kelvin (K) to RGB
+    # Algorithm from: https://tannerhelland.com/2012/09/18/convert-temperature-rgb-algorithm-code.html
+
+    temp = temp / 100
+    red = 0
+    green = 0
+    blue = 0
+
+    # RED
+    if temp <= 66:
+        red = 255
+    else:
+        red = temp - 60
+        red = 329.698727446 * (red ** -0.1332047592)
+        red = clamp(red, 0, 255)
+
+    # GREEN
+    if temp <= 66:
+        green = temp
+        green = 99.4708025861 * math.log(green) - 161.1195681661
+        green = clamp(green, 0, 255)
+    else:
+        green = temp - 60
+        green = 288.1221695283 * (green ** -0.0755148492)
+        green = clamp(green, 0, 255)
+
+    # BLUE
+    if temp >= 66:
+        blue = 255
+    else:
+        if temp <= 19:
+            blue = 0
+        else:
+            blue = temp - 10
+            blue = 138.5177312231 * math.log(blue) - 305.0447927307
+            blue = clamp(blue, 0, 255)
+
+    return (red, green, blue)
+
+
 display_colour(200, 50, 0)
