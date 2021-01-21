@@ -1,6 +1,8 @@
 from rpi_ws281x import PixelStrip, Color
 import math
 import time
+import datetime
+import logging
 
 # LED strip configuration:
 LED_COUNT = 119        # Number of LED pixels.
@@ -65,7 +67,35 @@ def convertTempToRGB(temp):
             blue = 138.5177312231 * math.log(blue) - 305.0447927307
             blue = clamp(blue, 0, 255)
 
-    return (red, green, blue)
+    # return (red, green, blue)
+    return (round(red), round(green), round(blue))
 
 
-display_colour(200, 50, 0)
+def automatic():
+    currentDT = datetime.datetime.now()
+    hour = currentDT.hour
+    minute = currentDT.minute
+
+    minutes = hour * 60 + minute
+
+    logging.info(f"hour: {hour}, minute: {minute}, minutes: {minutes}")
+
+    #f: y=(2)/(π)*1650 tan^(-1)((12 (x-522))/(120))+2350
+    # value = ((12(x-522)) / 120) + 2350
+    temperature = round((2/math.pi) * 1650 * math.atan((12 * (-1 * (minutes-1230))) / 120) + 2350)
+    logging.info(f"Automatic temperature is: {temperature}")
+
+    # calculate the rgb value for the particular temperature
+    red, green, blue = convertTempToRGB(temperature)
+    logging.info(f"Changing LED colours to red={red}, green={green}, blue={blue}")
+    display_colour(red, green, blue)
+
+
+if __name__ == "__main__":
+    format = "%(asctime)s [%(levelname)s]: %(message)s "
+    logging.basicConfig(format=format, level=logging.INFO,
+                        datefmt="%H:%M:%S")
+
+    while True:
+        automatic()
+        time.sleep(60)
