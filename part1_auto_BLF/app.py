@@ -96,11 +96,11 @@ def get_current_temp(time, Max=4000, Min=650, slope=2, sunset=(20, 0), sunrise=(
     sunset = sunset[0] + sunset[1]/60
     sunrise = sunrise[0] + sunrise[1]/60
 
-    if time < (sunrise + 24 - sunset)/2:
+    if time < (sunset - 24 + sunrise)/2:
         return round(((Min - Max)/math.pi) * math.atan(slope * (time + 24 - sunset)) + (Max + Min)/2)
     elif time < (sunrise + sunset) / 2:
         return round(((Min - Max)/math.pi) * math.atan(-slope * (time - sunrise)) + (Max + Min)/2)
-    elif time < sunset:
+    elif time < (sunset - 24 + sunrise)/2 + 24 :
         return round(((Min - Max)/math.pi) * math.atan(slope * (time - sunset)) + (Max + Min)/2)
     else:
         return round(((Min - Max)/math.pi) * math.atan(-slope * (time - (sunrise + 24))) + (Max + Min)/2)
