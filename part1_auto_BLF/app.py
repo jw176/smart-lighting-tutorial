@@ -102,6 +102,8 @@ def get_current_temp(time, Max=4000, Min=650, slope=2, sunset=(20, 0), sunrise=(
         return round(((Min - Max)/math.pi) * math.atan(-slope * (time - sunrise)) + (Max + Min)/2)
     elif time < sunset:
         return round(((Min - Max)/math.pi) * math.atan(slope * (time - sunset)) + (Max + Min)/2)
+    else:
+        return round(((Min - Max)/math.pi) * math.atan(-slope * (time - (sunrise + 24))) + (Max + Min)/2)
 
 
 
@@ -116,8 +118,10 @@ if __name__ == "__main__":
 
     for i in range(100):
         t = i % 24
-        temp = get_current_temp((t, 0))
-        red, green, blue = convertTempToRGB(temp)
-        display_colour(red, green, blue)
-        logging.info(f"Time = {t}, temp = {temp},  red={red}, green={green}, blue={blue}")
-        time.sleep(1)
+        for j in range(4):
+            minute = j * 15
+            temp = get_current_temp((t, minute))
+            red, green, blue = convertTempToRGB(temp)
+            display_colour(red, green, blue)
+            logging.info(f"Hour = {t}, minute = {minute}, temp = {temp},  red={red}, green={green}, blue={blue}")
+            time.sleep(0.1)
