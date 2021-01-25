@@ -5,6 +5,7 @@ import datetime
 import logging
 import requests
 import json
+import constants
 
 # LED strip configuration:
 LED_COUNT = 119        # Number of LED pixels.
@@ -128,7 +129,8 @@ def get_current_temp(time, Max=4000, Min=650, hours=2, sunset=(20, 0), sunrise=(
 
 
 def get_sunset_sunrise_time():
-
+    lat = constants.LAT
+    long = constants.LONG
 
     response = requests.get(f"https://api.sunrise-sunset.org/json?lat={lat}&lng={long}&date=today")
     if response.status_code != 200:
