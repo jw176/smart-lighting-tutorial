@@ -3,6 +3,8 @@ import math
 import time
 import datetime
 import logging
+import requests
+import json
 
 # LED strip configuration:
 LED_COUNT = 119        # Number of LED pixels.
@@ -120,9 +122,28 @@ def get_current_temp(time, Max=4000, Min=650, hours=2, sunset=(20, 0), sunrise=(
     elif time < sunset - hours/2:
         return Max
     elif time < sunset + hours/2:
-        return -1 * ((Max - Min) / 2) * math.sin(n * (time - sunrise)) + ((Max + Min) / 2) 
+        return -1 * ((Max - Min) / 2) * math.sin(n * (time - sunset)) + ((Max + Min) / 2) 
     else:
         return Min
+
+
+def get_sunset_sunrise_time():
+
+
+    response = requests.get(f"https://api.sunrise-sunset.org/json?lat={lat}&lng={long}&date=today")
+    if response.status_code != 200:
+        return # ?
+    
+    response = json.loads(response.content)
+    sunrise = convert_time_to_float(response["results"]["sunrise"])
+    sunset = convert_time_to_float(response["results"]["sunrise"])
+    
+    return {"sunrise": sunrise, "sunset": sunset}
+    
+
+def convert_time_to_float(time):
+    time = time.split(":")[:2]
+    return float(time[0]) + float(time[1])/60
 
 
 if __name__ == "__main__":
@@ -134,12 +155,25 @@ if __name__ == "__main__":
     #     automatic()
     #     time.sleep(60)
 
-    for i in range(100):
-        t = i % 24
-        for j in range(4):
-            minute = j * 15
-            temp = get_current_temp((t, minute))
-            red, green, blue = convertTempToRGB(temp)
-            display_colour(red, green, blue)
-            logging.info(f"Hour = {t}, minute = {minute}, temp = {temp},  red={red}, green={green}, blue={blue}")
-            time.sleep(0.1)
+    day = datetime.datetime.now().day
+    results = get_sunset_sunrise_time()
+    sunrise = results["sunrise"]
+    sunset = results["sunset"]
+    logging.info(f"Sunrise time for today: {sunrise}, sunset time for today: {sunset}")
+
+    while True:
+        currentDT = datetime.datetime.now()
+        currentDT = (currentDT.hour, currentDT.minute)
+
+        temp = get_current_temp(currentDT, sunrise=sunrise, sunset=sunset)
+        red, green, blue = convertTempToRGB(temp)
+        display_colour(red, green, blue)
+        logging.info(f"time={currentDT}, temp = {temp},  red={red}, green={green}, blue={blue}")
+        time.sleep(60)
+
+        if datetime.datetime.now().day != day:
+            # its a new day
+            # request sunset and sunrise times
+            results = get_sunset_sunrise_time()
+            sunrise = results["sunrise"]
+            sunset = results["sunset"]
