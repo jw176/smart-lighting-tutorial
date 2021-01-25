@@ -106,21 +106,20 @@ def automatic():
 #         return round(((Min - Max)/math.pi) * math.atan(-slope * (time - (sunrise + 24))) + (Max + Min)/2)
 
 
-def get_current_temp(time, Max=4000, Min=650, slope=2, sunset=(20, 0), sunrise=(6, 0)):
+def get_current_temp(time, Max=4000, Min=650, hours=2, sunset=(20, 0), sunrise=(6, 0)):
     time = time[0] + time[1]/60
     sunset = sunset[0] + sunset[1]/60
     sunrise = sunrise[0] + sunrise[1]/60
 
-    n = 2 * math.pi * slope
-    period = 2 * math.pi / n
+    n = math.pi / hours
 
-    if time < sunrise - period/4:
+    if time < sunrise - hours/2:
         return Min
-    elif time < sunrise + period/4:
+    elif time < sunrise + hours/2:
         return -1 * ((Max - Min) / 2) * math.cos(n * (time - sunrise)) + ((Max + Min) / 2)
     elif time < sunset - period/4:
         return Max
-    elif time < sunset + period/4:
+    elif time < sunset + hours/2:
         return ((Max - Min) / 2) * math.cos(n * (time - sunrise)) + ((Max + Min) / 2) 
     else:
         return Min
