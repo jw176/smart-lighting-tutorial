@@ -91,20 +91,39 @@ def automatic():
     display_colour(red, green, blue)
 
 
+# def get_current_temp(time, Max=4000, Min=650, slope=2, sunset=(20, 0), sunrise=(6, 0)):
+#     time = time[0] + time[1]/60
+#     sunset = sunset[0] + sunset[1]/60
+#     sunrise = sunrise[0] + sunrise[1]/60
+
+#     if time < (sunset - 24 + sunrise)/2:
+#         return round(((Min - Max)/math.pi) * math.atan(slope * (time + 24 - sunset)) + (Max + Min)/2)
+#     elif time < (sunrise + sunset) / 2:
+#         return round(((Min - Max)/math.pi) * math.atan(-slope * (time - sunrise)) + (Max + Min)/2)
+#     elif time < (sunset - 24 + sunrise)/2 + 24 :
+#         return round(((Min - Max)/math.pi) * math.atan(slope * (time - sunset)) + (Max + Min)/2)
+#     else:
+#         return round(((Min - Max)/math.pi) * math.atan(-slope * (time - (sunrise + 24))) + (Max + Min)/2)
+
+
 def get_current_temp(time, Max=4000, Min=650, slope=2, sunset=(20, 0), sunrise=(6, 0)):
     time = time[0] + time[1]/60
     sunset = sunset[0] + sunset[1]/60
     sunrise = sunrise[0] + sunrise[1]/60
 
-    if time < (sunset - 24 + sunrise)/2:
-        return round(((Min - Max)/math.pi) * math.atan(slope * (time + 24 - sunset)) + (Max + Min)/2)
-    elif time < (sunrise + sunset) / 2:
-        return round(((Min - Max)/math.pi) * math.atan(-slope * (time - sunrise)) + (Max + Min)/2)
-    elif time < (sunset - 24 + sunrise)/2 + 24 :
-        return round(((Min - Max)/math.pi) * math.atan(slope * (time - sunset)) + (Max + Min)/2)
-    else:
-        return round(((Min - Max)/math.pi) * math.atan(-slope * (time - (sunrise + 24))) + (Max + Min)/2)
+    n = 2 * math.pi * slope
+    period = 2 * math.pi / n
 
+    if time < sunrise - period/4:
+        return Min
+    elif time < sunrise + period/4:
+        return -1 * ((Max - Min) / 2) * math.cos(n * (time - sunrise)) + ((Max + Min) / 2)
+    elif time < sunset - period/4:
+        return Max
+    elif time < sunset + period/4:
+        return ((Max - Min) / 2) * math.cos(n * (time - sunrise)) + ((Max + Min) / 2) 
+    else:
+        return Min
 
 
 if __name__ == "__main__":
