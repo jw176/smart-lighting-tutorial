@@ -25,7 +25,7 @@ strip.begin()
 def display_colour(red, green, blue):
     for i in range(strip.numPixels()):
         strip.setPixelColor(i, Color(red, green, blue))
-        strip.show()
+        strip.show() # if you don't want the effect of each pixel changing one by one, move this to after the for loop
 
 
 def clamp(n, minn, maxn):
@@ -74,26 +74,6 @@ def convertTempToRGB(temp):
     return (round(red), round(green), round(blue))
 
 
-def automatic():
-    currentDT = datetime.datetime.now()
-    hour = currentDT.hour
-    minute = currentDT.minute
-
-    minutes = hour * 60 + minute
-
-    logging.info(f"hour: {hour}, minute: {minute}, minutes: {minutes}")
-
-    #f: y=(2)/(π)*1650 tan^(-1)((12 (x-522))/(120))+2350
-    # value = ((12(x-522)) / 120) + 2350
-    temperature = round((2/math.pi) * 1650 * math.atan((12 * (-1 * (minutes-1230))) / 120) + 2350)
-    logging.info(f"Automatic temperature is: {temperature}")
-
-    # calculate the rgb value for the particular temperature
-    red, green, blue = convertTempToRGB(temperature)
-    logging.info(f"Changing LED colours to red={red}, green={green}, blue={blue}")
-    display_colour(red, green, blue)
-
-
 # def get_current_temp(time, Max=4000, Min=650, slope=2, sunset=(20, 0), sunrise=(6, 0)):
 #     time = time[0] + time[1]/60
 #     sunset = sunset[0] + sunset[1]/60
@@ -129,23 +109,28 @@ def get_current_temp(time, Max=4000, Min=650, hours=2, sunset=(20, 0), sunrise=(
 
 
 def get_sunset_sunrise_time():
-    lat = constants.LAT
-    long = constants.LONG
+    city = "melbourne"
+    api_key = constants.API_KEY
 
-    response = requests.get(f"https://api.sunrise-sunset.org/json?lat={lat}&lng={long}&date=today")
+    response = requests.get(f"https://api.ipgeolocation.io/astronomy?apiKey={api_key}&location={city}")
+
     if response.status_code != 200:
         return # ?
     
     response = json.loads(response.content)
-    sunrise = convert_time_to_float(response["results"]["sunrise"])
-    sunset = convert_time_to_float(response["results"]["sunrise"])
-    
-    return {"sunrise": sunrise, "sunset": sunset}
-    
+    sunrise = response["sunrise"]
+    sunset = response["sunset"]
+    date = response["date"]
 
-def convert_time_to_float(time):
-    time = time.split(":")[:2]
-    return float(time[0]) + float(time[1])/60
+    logging.info(f"Today's date: {date}, sunrise: {sunrise}, sunset: {sunset}")
+
+    sunrise = sunrise.split(":")
+    sunrise = (int(sunrise[0]), int(sunrise[1]))
+
+    sunset = sunset.split(":")
+    sunset = (int(sunset[0]), int(sunset[1]))
+
+    return {"sunrise": sunrise, "sunset": sunset}
 
 
 if __name__ == "__main__":
@@ -153,15 +138,10 @@ if __name__ == "__main__":
     logging.basicConfig(format=format, level=logging.INFO,
                         datefmt="%H:%M:%S")
 
-    # while True:
-    #     automatic()
-    #     time.sleep(60)
-
     day = datetime.datetime.now().day
     results = get_sunset_sunrise_time()
     sunrise = results["sunrise"]
     sunset = results["sunset"]
-    logging.info(f"Sunrise time for today: {sunrise}, sunset time for today: {sunset}")
 
     while True:
         currentDT = datetime.datetime.now()
@@ -170,7 +150,7 @@ if __name__ == "__main__":
         temp = get_current_temp(currentDT, sunrise=sunrise, sunset=sunset)
         red, green, blue = convertTempToRGB(temp)
         display_colour(red, green, blue)
-        logging.info(f"time={currentDT}, temp = {temp},  red={red}, green={green}, blue={blue}")
+        logging.info(f"Colour temperature = {temp},  red={red}, green={green}, blue={blue}")
         time.sleep(60)
 
         if datetime.datetime.now().day != day:
