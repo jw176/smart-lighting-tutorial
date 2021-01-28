@@ -5,7 +5,7 @@ import datetime
 import logging
 import requests
 import json
-import constants
+import constants # a file called constants.py that you need to put in the same directory as app.py
 
 # LED strip configuration:
 LED_COUNT = 119        # Number of LED pixels.
@@ -29,6 +29,7 @@ def display_colour(red, green, blue):
 
 
 def clamp(n, minn, maxn):
+    # Function for limiting a number to a specified number range
     return max(min(maxn, n), minn)
 
 
@@ -90,6 +91,8 @@ def convertTempToRGB(temp):
 
 
 def get_current_temp(time, Max=4000, Min=650, hours=2, sunset=(20, 0), sunrise=(6, 0)):
+    # Function for getting the relevant colour temperature for a the time of day
+    # times are converted from a tuple (hour, minute) to a float
     time = time[0] + time[1]/60
     sunset = sunset[0] + sunset[1]/60
     sunrise = sunrise[0] + sunrise[1]/60
@@ -109,13 +112,11 @@ def get_current_temp(time, Max=4000, Min=650, hours=2, sunset=(20, 0), sunrise=(
 
 
 def get_sunset_sunrise_time():
-    city = "melbourne"
+    # Function for getting the relevant sunrise and sunset times for your city
+    city = constants.CITY
     api_key = constants.API_KEY
 
     response = requests.get(f"https://api.ipgeolocation.io/astronomy?apiKey={api_key}&location={city}")
-
-    if response.status_code != 200:
-        return # ?
     
     response = json.loads(response.content)
     sunrise = response["sunrise"]
@@ -138,24 +139,29 @@ if __name__ == "__main__":
     logging.basicConfig(format=format, level=logging.INFO,
                         datefmt="%H:%M:%S")
 
-    day = datetime.datetime.now().day
+    day = datetime.datetime.now().day # getting the current day
     results = get_sunset_sunrise_time()
     sunrise = results["sunrise"]
     sunset = results["sunset"]
 
     while True:
-        currentDT = datetime.datetime.now()
+        currentDT = datetime.datetime.now() # getting the current time
         currentDT = (currentDT.hour, currentDT.minute)
 
-        temp = get_current_temp(currentDT, sunrise=sunrise, sunset=sunset)
-        red, green, blue = convertTempToRGB(temp)
-        display_colour(red, green, blue)
+        temp = get_current_temp(currentDT, sunrise=sunrise, sunset=sunset, hours=1.5) # getting current colour temperature
+        red, green, blue = convertTempToRGB(temp) # converting current colour temperature to RGB
+        display_colour(red, green, blue) # displaying RGB values on the led strip
         logging.info(f"Colour temperature = {temp},  red={red}, green={green}, blue={blue}")
-        time.sleep(60)
+
+        time.sleep(60) # this adjusts how often to update the colours of the lights
 
         if datetime.datetime.now().day != day:
             # its a new day
             # request sunset and sunrise times
-            results = get_sunset_sunrise_time()
-            sunrise = results["sunrise"]
-            sunset = results["sunset"]
+            try:
+                results = get_sunset_sunrise_time()
+                sunrise = results["sunrise"]
+                sunset = results["sunset"]
+            except:
+                logging.error('Could not retrieve sunrise and sunset information!')
+                pass
